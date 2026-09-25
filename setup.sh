@@ -200,6 +200,18 @@ log "(not just skill text on the default agent) - each maps its own skills as"
 log "always-on resources and gets its own system prompt and tools. Start a session"
 log "as one with: kirocrew chat --agent rocket-meowth"
 
+if command -v kirocrew >/dev/null 2>&1; then
+  for member in meowth jessie james; do
+    if out=$(kirocrew agent create --name "rocket-$member" --kiro-agent "rocket-$member" 2>&1); then
+      log "+ enrolled rocket-$member as a crew member (dashboard: Agent Capabilities > Agents)"
+    elif echo "$out" | grep -qi "already exists"; then
+      log "rocket-$member already enrolled - left as is"
+    else
+      log "warning: could not enroll rocket-$member ($out)"
+    fi
+  done
+fi
+
 crew_yaml="$TARGET/.kiro/crew/crew.yaml"
 if [ ! -f "$crew_yaml" ]; then
   run cp "$SCRIPT_DIR/.kiro/crew/crew.yaml" "$crew_yaml"
