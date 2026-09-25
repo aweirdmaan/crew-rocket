@@ -1,5 +1,8 @@
 ---
+name: rocket-approval-check
 description: Check the epic for human approval of the current task list; never pause
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: meowth
 argument-hint: the beads epic id
 ---

@@ -1,5 +1,8 @@
 ---
+name: rocket-implement
 description: Execute the next grape task exactly as written
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: james
 argument-hint: the beads epic id (or story) to work through
 ---

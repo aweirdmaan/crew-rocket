@@ -1,5 +1,8 @@
 ---
+name: rocket-confirm-plan
 description: Check every open question is answered, then persist the approved plan as grape tasks
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: meowth
 argument-hint: the beads epic id
 ---

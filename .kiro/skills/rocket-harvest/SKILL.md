@@ -1,5 +1,8 @@
 ---
+name: rocket-harvest
 description: Record human MR/PR review comments in beads; file proposals for recurring themes
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: james
 argument-hint: MR/PR URL, optionally the beads story id
 ---

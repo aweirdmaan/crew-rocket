@@ -40,8 +40,8 @@ rocket-pr                stacked MR per grape + epic roll-up MR
 rocket-harvest           (later) human review comments -> beads + process proposals
 ```
 
-`skills/rocket-crew.md` is the entry point and states this sequence and its two
-human gates in full; invoke it and it delegates to the rest.
+`.kiro/skills/rocket-crew/SKILL.md` is the entry point and states this sequence
+and its two human gates in full; invoke it and it delegates to the rest.
 
 A **grape** is a task one `rocket-implement` invocation finishes: one logical
 change, 1 to 3 small commits. Planning splits work until everything is a grape.
@@ -68,7 +68,10 @@ Interactively, `setup.sh`:
 2. Detects what's on your machine: `claude`, `codex`, `opencode`, `OPENROUTER_API_KEY`, `DEVPASS_BASE_URL`/`DEVPASS_API_KEY`.
 3. Proposes a backend per crew member and lets you confirm or override.
 4. If you picked OpenRouter or an internal gateway for any role, writes an opencode OpenAI-compatible provider config pointing at it (opencode is the backend that actually reaches those).
-5. Copies `.kiro/steering/`, `skills/`, and `.kiro/crew/` into `--target`.
+5. Copies `.kiro/steering/`, `.kiro/skills/`, and `.kiro/crew/` into
+   `--target`, and installs the same skills globally under
+   `~/.kiro/crew/skills/` (repo-scoped, so no dashboard trust grant is
+   needed to activate them).
 6. Initializes beads (`bd init`) and writes `.kiro/crew/beads-dir`.
 7. Applies what it can to KiroCrew's config (`agent.acp_backend`, `agent.member_acp_backend`) and tells you exactly what it couldn't apply and why.
 
@@ -137,32 +140,88 @@ scripts/rocket-use-backend.sh  # switch agent.acp_backend to a crew member's ass
 │   ├── philosophy.md          # the lens the rules fall out of
 │   ├── opinions.md            # how code gets written here (commits, spec-driven, style)
 │   └── failure-modes.md       # named smells, one line + minimal bad/good pair each
-└── crew/
-    ├── crew.yaml               # the three members, their skills, their intended backend
-    └── beads-dir.example       # points bd at your workspace database
-skills/
-├── rocket-crew.md              # entry point: the full pipeline and its two human gates
-├── rocket-ideate.md            # meowth
-├── rocket-plan.md              # meowth + jessie
-├── rocket-confirm-plan.md      # meowth
-├── rocket-approval-check.md    # meowth
-├── rocket-implement.md         # james
-├── rocket-verify.md            # jessie
-├── rocket-fix.md               # james
-├── rocket-confirm.md           # jessie
-├── rocket-pr.md                # james
-├── rocket-retro.md             # meowth
-└── rocket-harvest.md           # james
+├── crew/
+│   ├── crew.yaml               # the three members, their skills, their intended backend
+│   └── beads-dir.example       # points bd at your workspace database
+└── skills/                     # one directory per skill, KiroCrew's native SKILL.md format
+    ├── rocket-crew/SKILL.md         # entry point: the full pipeline and its two human gates
+    ├── rocket-ideate/SKILL.md       # meowth
+    ├── rocket-plan/SKILL.md         # meowth + jessie
+    ├── rocket-confirm-plan/SKILL.md # meowth
+    ├── rocket-approval-check/SKILL.md # meowth
+    ├── rocket-implement/SKILL.md    # james
+    ├── rocket-verify/SKILL.md       # jessie
+    ├── rocket-fix/SKILL.md          # james
+    ├── rocket-confirm/SKILL.md      # jessie
+    ├── rocket-pr/SKILL.md           # james
+    ├── rocket-retro/SKILL.md        # meowth
+    └── rocket-harvest/SKILL.md      # james
 ```
+
+Each `SKILL.md` carries `repo_scope: .kiro/crew/crew.yaml`, so it only
+activates in a session whose project contains that file. `setup.sh` installs
+every skill both into `<project>/.kiro/skills/` (KiroCrew's project-scoped
+location — browsable once you grant that project dashboard trust) and into
+`~/.kiro/crew/skills/` (global — active immediately, no trust grant needed,
+and harmless everywhere else because of `repo_scope`).
+
+## Agents, not just skill text
+
+Meowth, Jessie, and James are real KiroCrew agents (`.kiro/agents/rocket-*.json`),
+not one generic session asked to switch hats. Each has its own system prompt and
+its own skills mapped as always-on `skill://` resources — KiroCrew's own rule is
+that a custom agent with no mapping "brings its own" and sees nothing from the
+global catalog, so this mapping is what makes the role's skills load in full,
+every time, rather than depending on keyword-trigger matching (off by default)
+or the agent deciding on its own to go search for them. `setup.sh` installs all
+three both globally (`~/.kiro/agents/`) and into the project
+(`<project>/.kiro/agents/`).
+
+What an agent spec cannot do: KiroCrew has no path-scoped write permission, so
+"Jessie never touches production code" is not a tool-level guarantee — nothing
+stops her `fs_write` grant from reaching `src/`. It stays a prompt-level
+discipline, the same as before; the agent split changes how reliably her two
+skills load, not what her tools can structurally forbid.
+
+**Verified status, `claude` backend, KiroCrew 0.7.1 + claude-agent-acp 0.81.2:**
+tested live — created the agent spec, enrolled it (`kirocrew agent create --name
+rocket-meowth --kiro-agent rocket-meowth`), started a session with `chat --agent
+rocket-meowth`, and asked it directly whether its system prompt mentioned beads,
+grapes, or meowth. It answered "no such content" — the custom prompt and mapped
+skills are not reaching the session on this backend, in this version. This
+matches a class of open KiroCrew issues on custom/crew agents under the `claude`
+backend specifically (kirodotdev/KiroCrew#8152 documents `claude` as an
+acknowledged "second-class member backend" with real dispatch gaps;
+kirodotdev/KiroCrew#9602 is an unresolved custom-agent bug of a similar shape).
+It is not something this setup got wrong; it is not something this setup can
+currently fix either. Until that's resolved upstream, the agent specs are the
+structurally-correct artifact (and may already work on the `kiro` or `kas`
+backends — untested here, no `kiro-cli` installed) but the reliable path on
+`claude` today is still the direct one: tell the session which skill to read.
 
 ## Run
 
-After `setup.sh`, from your project:
+After `setup.sh`, on the `claude` backend (verified, see above — the agent
+mechanism doesn't reach the session yet), start a session bound to your
+project (CLI: run from inside it; dashboard: pick it in the project switcher)
+and tell it directly which skill to read: *"read
+`.kiro/skills/rocket-crew/SKILL.md` and follow it for PROJ-123."* That works
+identically whether or not KiroCrew is even involved — a bare `claude` or
+`codex` session with no KiroCrew reads the same file the same way.
 
-*"Invoke the rocket-crew skill with PROJ-123."* (or whatever your backend's
-invocation syntax is — a KiroCrew session, `claude` with the skill loaded,
-`codex exec`, etc.) It walks the pipeline above, stopping cold at both human
-gates.
+On `kiro` or `kas` (untested here, but that's where the docs say custom-agent
+`prompt`/`resources` are natively loaded rather than field-by-field projected):
+
+```bash
+scripts/rocket-use-backend.sh meowth   # picks meowth's backend from crew.yaml
+kirocrew chat --agent rocket-meowth    # -m "use rocket-ideate for PROJ-123" for one shot
+```
+
+Switch to `rocket-jessie` or `rocket-james` (running `rocket-use-backend.sh`
+first if that role's backend differs) as the pipeline reaches their skills.
+
+Either path
+walks the pipeline above, stopping cold at both human gates.
 
 `make validate` runs this repo's own self-checks before you commit changes to
 the process itself.

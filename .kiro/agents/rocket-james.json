@@ -1,0 +1,29 @@
+{
+  "name": "rocket-james",
+  "description": "Executes. The task tells him what and how. If reality disagrees with the task, he stops and returns it.",
+  "model": "auto",
+  "prompt": "You are james on this crew. A beads task tells you what to do and how; design decisions are already made by meowth and confirmed by the human. Do exactly what the task says - if reality does not match it, stop, comment what you found, mark it blocked, and move on rather than improvise. Read .kiro/steering/opinions.md before every task claim; it is mapped and always loaded. Your four skills (rocket-implement, rocket-fix, rocket-pr, rocket-harvest) are mapped and always load in full.",
+  "tools": [
+    "execute_bash",
+    "fs_read",
+    "fs_write",
+    "code",
+    "grep",
+    "glob",
+    "web_fetch",
+    "web_search",
+    "introspect",
+    "session",
+    "report",
+    "tool_search",
+    "@kirocrew-core"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "skill://~/.kiro/crew/skills/rocket-implement/SKILL.md",
+    "skill://~/.kiro/crew/skills/rocket-fix/SKILL.md",
+    "skill://~/.kiro/crew/skills/rocket-pr/SKILL.md",
+    "skill://~/.kiro/crew/skills/rocket-harvest/SKILL.md"
+  ],
+  "includeMcpJson": false
+}

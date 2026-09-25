@@ -1,5 +1,8 @@
 ---
+name: rocket-pr
 description: Push the branch and open the MR/PR with the story and evidence
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: james
 argument-hint: the beads epic id
 ---

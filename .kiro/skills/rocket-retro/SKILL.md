@@ -1,5 +1,8 @@
 ---
+name: rocket-retro
 description: Judge the plan against the outcome; record what the team learned
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: meowth
 argument-hint: the beads epic id
 ---

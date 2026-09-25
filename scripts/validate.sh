@@ -9,28 +9,38 @@ note() { printf '  %s\n' "$1"; }
 
 echo "== skills referenced by rocket-crew.md exist =="
 while IFS= read -r skill; do
-  if [ -f "skills/$skill.md" ]; then
+  if [ -f ".kiro/skills/$skill/SKILL.md" ]; then
     ok "$skill"
   else
-    bad "$skill (referenced by rocket-crew.md, missing from skills/)"
+    bad "$skill (referenced by rocket-crew.md, missing from .kiro/skills/)"
   fi
-done < <(grep -oE '`rocket-[a-z-]+`' skills/rocket-crew.md | tr -d '`' \
+done < <(grep -oE '`rocket-[a-z-]+`' .kiro/skills/rocket-crew/SKILL.md | tr -d '`' \
            | grep -vx -e rocket-gate-check -e rocket-use-backend | sort -u)
 
 echo "== skill frontmatter =="
-for f in skills/*.md; do
-  if grep -q '^description:' "$f" && grep -q '^crew_member:' "$f"; then
+for f in .kiro/skills/*/SKILL.md; do
+  if grep -q '^description:' "$f" && grep -q '^crew_member:' "$f" && grep -q '^repo_scope:' "$f"; then
     ok "$f"
   else
-    bad "$f (missing description: or crew_member: frontmatter)"
+    bad "$f (missing description:, crew_member:, or repo_scope: frontmatter)"
   fi
 done
 
 echo "== artifacts exist =="
 for f in .kiro/steering/opinions.md .kiro/steering/philosophy.md \
          .kiro/steering/failure-modes.md .kiro/crew/crew.yaml \
-         .kiro/crew/beads-dir.example; do
+         .kiro/crew/beads-dir.example .kiro/agents/rocket-meowth.json \
+         .kiro/agents/rocket-jessie.json .kiro/agents/rocket-james.json; do
   if [ -f "$f" ]; then ok "$f"; else bad "$f (missing)"; fi
+done
+
+echo "== agent specs parse as JSON =="
+for f in .kiro/agents/rocket-*.json; do
+  if python3 -c "import json; json.load(open('$f'))" 2>/dev/null; then
+    ok "$f"
+  else
+    bad "$f (invalid JSON)"
+  fi
 done
 
 echo "== crew.yaml parses =="

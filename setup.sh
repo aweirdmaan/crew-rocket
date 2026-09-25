@@ -161,7 +161,7 @@ fi
 
 step "4. Copy the crew into $TARGET"
 
-run mkdir -p "$TARGET/.kiro/steering" "$TARGET/.kiro/crew" "$TARGET/skills" "$TARGET/scripts"
+run mkdir -p "$TARGET/.kiro/steering" "$TARGET/.kiro/crew" "$TARGET/.kiro/skills" "$TARGET/scripts"
 for f in "$SCRIPT_DIR"/.kiro/steering/*.md; do
   dest="$TARGET/.kiro/steering/$(basename "$f")"
   if [ -f "$dest" ]; then
@@ -170,9 +170,35 @@ for f in "$SCRIPT_DIR"/.kiro/steering/*.md; do
     run cp "$f" "$dest"
   fi
 done
-run cp "$SCRIPT_DIR/skills/"*.md "$TARGET/skills/"
+for d in "$SCRIPT_DIR"/.kiro/skills/*/; do
+  slug="$(basename "$d")"
+  run mkdir -p "$TARGET/.kiro/skills/$slug"
+  run cp "$d/SKILL.md" "$TARGET/.kiro/skills/$slug/SKILL.md"
+done
 run cp "$SCRIPT_DIR/scripts/rocket-gate-check.sh" "$SCRIPT_DIR/scripts/rocket-use-backend.sh" "$TARGET/scripts/"
 run chmod +x "$TARGET/scripts/rocket-gate-check.sh" "$TARGET/scripts/rocket-use-backend.sh"
+
+KIROCREW_HOME="${KIROCREW_HOME:-$HOME/.kiro/crew}"
+run mkdir -p "$KIROCREW_HOME/skills"
+for d in "$SCRIPT_DIR"/.kiro/skills/*/; do
+  slug="$(basename "$d")"
+  run mkdir -p "$KIROCREW_HOME/skills/$slug"
+  run cp "$d/SKILL.md" "$KIROCREW_HOME/skills/$slug/SKILL.md"
+done
+log "Installed as global KiroCrew skills too ($KIROCREW_HOME/skills/rocket-*), each"
+log "scoped with repo_scope: .kiro/crew/crew.yaml - they only activate in a session"
+log "whose project contains that file, so no per-project dashboard trust grant is"
+log "needed. Restart the gateway (kirocrew restart) to pick them up."
+
+run mkdir -p "$TARGET/.kiro/agents" "$HOME/.kiro/agents"
+for a in "$SCRIPT_DIR"/.kiro/agents/*.json; do
+  run cp "$a" "$TARGET/.kiro/agents/$(basename "$a")"
+  run cp "$a" "$HOME/.kiro/agents/$(basename "$a")"
+done
+log "Installed rocket-meowth / rocket-jessie / rocket-james as real KiroCrew agents"
+log "(not just skill text on the default agent) - each maps its own skills as"
+log "always-on resources and gets its own system prompt and tools. Start a session"
+log "as one with: kirocrew chat --agent rocket-meowth"
 
 crew_yaml="$TARGET/.kiro/crew/crew.yaml"
 if [ ! -f "$crew_yaml" ]; then
@@ -241,7 +267,7 @@ step "Done"
 
 log "Crew copied into: $TARGET"
 log "Steering:          $TARGET/.kiro/steering/{philosophy,opinions,failure-modes}.md"
-log "Skills:            $TARGET/skills/rocket-*.md"
+log "Skills:            $TARGET/.kiro/skills/rocket-*/SKILL.md (+ global copies under $KIROCREW_HOME/skills/)"
 log "Crew manifest:     $crew_yaml"
 log "Beads:             $BEADS_DIR"
 log ""

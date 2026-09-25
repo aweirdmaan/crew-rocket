@@ -1,5 +1,8 @@
 ---
+name: rocket-crew
 description: Entry point - run the full plan-then-build pipeline across the crew, backend-agnostic
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: meowth
 argument-hint: story id or story description
 ---

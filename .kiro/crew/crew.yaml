@@ -4,6 +4,7 @@ members:
       Plans and discovers. Given WHY and WHAT, digs through the code, drafts
       the HOW, cites every source, and logs every decision in beads.
     skills: [rocket-ideate, rocket-plan, rocket-confirm-plan, rocket-approval-check, rocket-retro]
+    agent: rocket-meowth
     backend: claude
     effort: high
 
@@ -13,6 +14,7 @@ members:
       attacks it, checks nothing regressed. Test probes only, never
       production code.
     skills: [rocket-verify, rocket-confirm]
+    agent: rocket-jessie
     backend: claude
     effort: high
 
@@ -21,5 +23,6 @@ members:
       Executes. The task tells him what and how. If reality disagrees with
       the task, he stops and returns it.
     skills: [rocket-implement, rocket-fix, rocket-pr, rocket-harvest]
+    agent: rocket-james
     backend: codex
     effort: medium

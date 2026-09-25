@@ -1,5 +1,8 @@
 ---
+name: rocket-ideate
 description: Turn a story idea or tracker id into a beads story with WHY and WHAT
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: meowth
 argument-hint: story id or story description
 ---

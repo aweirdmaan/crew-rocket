@@ -1,5 +1,8 @@
 ---
+name: rocket-confirm
 description: Confirm the fixes hold; final verdict before the PR
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: jessie
 argument-hint: the beads epic id
 ---

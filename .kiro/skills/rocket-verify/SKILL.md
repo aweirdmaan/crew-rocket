@@ -1,5 +1,8 @@
 ---
+name: rocket-verify
 description: Prove the change survives production, then review the diff
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: jessie
 argument-hint: the beads epic id
 ---

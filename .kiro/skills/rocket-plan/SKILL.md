@@ -1,5 +1,8 @@
 ---
+name: rocket-plan
 description: Discover the code, draft the HOW with citations, challenge it, and put one question batch to the human on the beads epic
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: meowth
 argument-hint: the beads epic id from rocket-ideate
 ---

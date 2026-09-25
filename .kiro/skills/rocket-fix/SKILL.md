@@ -1,5 +1,8 @@
 ---
+name: rocket-fix
 description: Address verification findings
+always: true
+repo_scope: .kiro/crew/crew.yaml
 crew_member: james
 argument-hint: the beads epic id
 ---
