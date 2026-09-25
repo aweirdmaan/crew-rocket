@@ -121,6 +121,10 @@ KiroCrew isn't the backend in use:
   same lesson is recallable by KiroCrew's own memory in a session that never
   reads the epic.
 
+See `docs/dark-factory-roadmap.md` for what a fully unattended setup (work
+triggers itself, only a genuine blocker reaches a human) needs that isn't
+built yet.
+
 ## What's inside
 
 ```
