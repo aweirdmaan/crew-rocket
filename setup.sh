@@ -227,6 +227,11 @@ if command -v kirocrew >/dev/null 2>&1; then
   log "Before invoking james's skills (rocket-implement, rocket-fix, rocket-pr,"
   log "rocket-harvest) on a different backend than meowth, run:"
   log "  $TARGET/scripts/rocket-use-backend.sh james"
+
+  if ! run kirocrew config set knowledge.auto_add_documents true; then
+    log "kirocrew rejected knowledge.auto_add_documents=true - rocket-plan's Knowledge"
+    log "Library step will skip itself since the tool it needs stays gated off."
+  fi
 else
   log "kirocrew not installed - crew.yaml records the intended backends; apply them"
   log "with 'kirocrew config set agent.acp_backend <backend>' once it is."

@@ -11,11 +11,13 @@ argument-hint: the beads epic id from rocket-ideate
 bd show <epic-id>
 ```
 
-Read first: `.kiro/steering/opinions.md`, `.kiro/steering/philosophy.md`, `.kiro/steering/failure-modes.md`, and the project's own docs (CLAUDE.md, AGENTS.md, rules files).
+Read first: `.kiro/steering/opinions.md`, `.kiro/steering/philosophy.md`, `.kiro/steering/failure-modes.md`, and the project's own docs (CLAUDE.md, AGENTS.md, rules files). That direct read is the reliable baseline on every backend; it is never skipped in favor of what follows.
+
+If you are running as a KiroCrew session and the `knowledge_add_document` tool is available, also add each of the three steering files to the Knowledge Library, one call per file, with `title` set to its path (`.kiro/steering/opinions.md` etc.) so a rerun updates the same document instead of duplicating it. This costs nothing extra to discovery and lets `local_knowledge_search` surface a relevant passage by meaning later in this skill or in `rocket-implement`, instead of everyone re-reading the whole file cold every time. If the tool is not available (no KiroCrew, or `knowledge.auto_add_documents` is off), skip this without comment - the direct read above already covers you.
 
 ## 1. Discover (meowth)
 
-Given WHY and WHAT, find everything needed to write the HOW. Read the code the story touches, its siblings, its tests. Cite every source. Log every decision as a beads comment on the epic, in this shape:
+Given WHY and WHAT, find everything needed to write the HOW. Read the code the story touches, its siblings, its tests. If `local_knowledge_search` is available, also search it for prior decisions or steering passages relevant to this story - it can surface something the direct reads above missed by wording rather than location. Cite every source. Log every decision as a beads comment on the epic, in this shape:
 
 ```
 DECISION: <what>

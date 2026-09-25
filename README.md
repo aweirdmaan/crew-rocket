@@ -100,6 +100,27 @@ which reads james's `backend:` straight out of `.kiro/crew/crew.yaml` and
 applies it. Selectable backends as of writing: `kiro`, `claude`, `kas`,
 `codex`, `opencode`, `pi`, `goose`.
 
+## Beads vs. KiroCrew's own memory/knowledge
+
+Beads is the task/decision layer: epics, dependency edges, a ready-queue,
+claim/close-with-reason, the `GATE:` comment trail. KiroCrew's own memory
+(per-member preferences, project context, conversation history, taught
+"lessons") and Knowledge Library (semantic search over documents you add)
+solve a different problem — assistant recall and document retrieval, not
+task state — and nothing here uses either as a replacement for beads.
+Two additive integrations, both optional and both skipped cleanly when
+KiroCrew isn't the backend in use:
+
+- `rocket-plan` adds the three steering docs to the Knowledge Library via
+  the `knowledge_add_document` tool (gated by `knowledge.auto_add_documents`,
+  which `setup.sh` turns on), then also queries `local_knowledge_search`
+  during discovery — a second way to find a relevant passage by meaning,
+  never a replacement for the direct read it always does first.
+- `rocket-retro` also runs `kirocrew learn add "<lesson>" --category
+  knowledge` for each cross-cutting insight, alongside `bd remember`, so the
+  same lesson is recallable by KiroCrew's own memory in a session that never
+  reads the epic.
+
 ## What's inside
 
 ```
