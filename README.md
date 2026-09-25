@@ -1,14 +1,12 @@
 # Crew Rocket
 
-> *Prepare for trouble — on whatever CLI you've got.*
+> *Prepare for trouble — and make it double-tested.*
 
-[team-rocket](https://github.com/) packaged its development process as [Archon](https://github.com/coleam00/Archon)
-workflows — powerful, but wired to Claude Code as the only agent. Crew Rocket
-is the same process (plan with citations, build in grape-sized tasks, prove
-the result survives production, beads holds every decision) rebuilt on
-[KiroCrew](https://kiro.dev/crew/), whose orchestration layer is agent-agnostic:
-Claude Code, Codex, opencode (and through it, OpenRouter or an internal LLM
-gateway like devpass), kas, goose, pi.
+A development process for AI coding, packaged as [KiroCrew](https://kiro.dev/crew/)
+skills. Plan with citations, build in grape-sized tasks, prove the result
+survives production. Beads holds every decision. Runs on Claude Code, Codex,
+opencode (and through it, OpenRouter or an internal LLM gateway), kas, pi, or
+goose.
 
 ## The team
 
@@ -48,32 +46,13 @@ human gates in full; invoke it and it delegates to the rest.
 A **grape** is a task one `rocket-implement` invocation finishes: one logical
 change, 1 to 3 small commits. Planning splits work until everything is a grape.
 
-## Why KiroCrew and not Archon
-
-Archon's workflow YAML is a real declarative DAG with deterministic bash gate
-nodes — a guarantee crew-rocket cannot fully replicate, because KiroCrew has
-no equivalent engine (confirmed against a real 0.7.1 install; see below). The
-trade crew-rocket makes:
-
-- **Durable handoff** replaces Archon's per-run `$ARTIFACTS_DIR`: every skill
-  reads and writes beads directly (`bd comment`, `bd show`, `bd list`).
-  Nothing lives only in a session that might not survive to the next one.
-- **`GATE: PASS` / `GATE: FAIL`** beads comments replace Archon's verdict
-  files. `scripts/rocket-gate-check.sh <epic-id> "GATE: PASS"` is the
-  mechanical check — run it, don't trust the agent's word for it. It's a
-  plain bash script; it works identically regardless of which backend wrote
-  the comment.
-- **`skills/rocket-crew.md`** replaces the YAML DAG. There is no engine
-  sequencing nodes for you; that skill *is* the sequence, and it names
-  exactly where the mechanical gate checks belong so an agent can't reason
-  its way past them.
-
-This is honestly weaker than Archon's structural guarantee in one place: an
-AI backend *can* choose not to follow `rocket-crew.md`'s instruction to run
-the gate check. If you're on Claude Code with Archon available, team-rocket's
-original guarantee is stronger for that backend specifically. Crew Rocket
-trades some of that rigor for running the same process on Codex, opencode,
-OpenRouter, or an internal gateway too.
+Every skill hands off through beads: `bd comment`, `bd show`, `bd list`.
+Nothing lives only in a session that might not survive to the next one.
+`GATE: PASS` / `GATE: FAIL` beads comments are the checkpoints between
+stages; `scripts/rocket-gate-check.sh <epic-id> "GATE: PASS"` is the
+mechanical check that runs before anything downstream proceeds - a plain
+bash script, so it works identically no matter which backend wrote the
+comment.
 
 ## Install
 
@@ -88,35 +67,30 @@ Interactively, `setup.sh`:
 1. Installs [KiroCrew](https://kiro.dev/crew/) if it isn't already (asks first — it's a real install, ~1GB with its bundled Python runtime).
 2. Detects what's on your machine: `claude`, `codex`, `opencode`, `OPENROUTER_API_KEY`, `DEVPASS_BASE_URL`/`DEVPASS_API_KEY`.
 3. Proposes a backend per crew member and lets you confirm or override.
-4. If you picked OpenRouter or an internal gateway (devpass) for any role, writes an opencode OpenAI-compatible provider config pointing at it (opencode is the backend that actually reaches those — see `.kiro/crew/crew.yaml`'s header comment for why there's no direct "openrouter" backend).
+4. If you picked OpenRouter or an internal gateway for any role, writes an opencode OpenAI-compatible provider config pointing at it (opencode is the backend that actually reaches those).
 5. Copies `.kiro/steering/`, `skills/`, and `.kiro/crew/` into `--target`.
 6. Initializes beads (`bd init`) and writes `.kiro/crew/beads-dir`.
-7. Applies what it can to KiroCrew's config (`agent.acp_backend`, `agent.member_acp_backend` — see the next section for why not more) and tells you exactly what it couldn't apply and why.
+7. Applies what it can to KiroCrew's config (`agent.acp_backend`, `agent.member_acp_backend`) and tells you exactly what it couldn't apply and why.
 
 Single-command, no prompts: `./setup.sh --target DIR --meowth claude --jessie claude --james codex --yes`.
 
 `--dry-run` prints every command without running it.
 
-## Backends: what's real vs. what's per-role
+## Backends: what's global vs. what's per-role
 
-Verified against a real KiroCrew 0.7.1 install, not assumed from docs: its
-config is **global**, not per-named-crew-member.
+KiroCrew's config is **global**, not per-named-crew-member:
 
 - `kirocrew config set agent.acp_backend <backend>` — the backend *this
-  session* runs on. Works.
+  session* runs on.
 - `kirocrew config set agent.member_acp_backend <backend>` — the backend a
-  session delegates spawned/subagent work to. Works.
-- `kirocrew config set member_acp_backend.meowth <backend>` (a key per named
-  crew member) — does not exist. Errors `Unknown key`.
-- `agent.role_models` / `agent.role_efforts` accept a JSON object and report
-  success, but do not persist (read back as `{}` immediately after). Don't
-  rely on them.
+  session delegates spawned/subagent work to.
 
-So meowth, jessie, and james cannot all be pinned to different backends at
-once through config alone. `setup.sh` applies meowth's choice to
-`agent.acp_backend` and jessie's to `agent.member_acp_backend` (she's the one
-meowth spawns as a challenger during `rocket-plan`). Before starting james's
-session on a different backend, run:
+There is no key per named crew member. So meowth, jessie, and james cannot
+all be pinned to different backends at once through config alone.
+`setup.sh` applies meowth's choice to `agent.acp_backend` and jessie's to
+`agent.member_acp_backend` (she's the one meowth spawns as a challenger
+during `rocket-plan`). Before starting james's session on a different
+backend, run:
 
 ```bash
 scripts/rocket-use-backend.sh james

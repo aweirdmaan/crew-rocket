@@ -11,7 +11,7 @@ argument-hint: the beads epic id from rocket-ideate
 bd show <epic-id>
 ```
 
-Read first: `.kiro/steering/opinions.md`, `.kiro/steering/philosophy.md`, `.kiro/steering/failure-modes.md`, and the project's own docs (CLAUDE.md, TEAM-ROCKET.md, rules files).
+Read first: `.kiro/steering/opinions.md`, `.kiro/steering/philosophy.md`, `.kiro/steering/failure-modes.md`, and the project's own docs (CLAUDE.md, AGENTS.md, rules files).
 
 ## 1. Discover (meowth)
 

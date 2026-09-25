@@ -1,24 +1,3 @@
-# crew-rocket crew manifest.
-#
-# Descriptive source of truth for the team. `kirocrew config get` (checked
-# against a real 0.7.1 install) exposes exactly two GLOBAL backend knobs -
-# `agent.acp_backend` (this session's own backend) and `agent.member_acp_backend`
-# (the backend a session delegates spawned/subagent work to) - there is no
-# per-named-member key. So the three `backend:` fields below cannot all be
-# live in KiroCrew's config at once; setup.sh applies meowth's to
-# agent.acp_backend and jessie's to member_acp_backend (she's the one meowth
-# spawns as a challenger during rocket-plan), and james gets a real switch
-# via `scripts/rocket-use-backend.sh james` before you start his session.
-#
-# KiroCrew's selectable backends as of writing: kiro, claude, kas, codex,
-# opencode, pi, goose. There is no first-class "openrouter" or "devpass"
-# backend — those are model gateways, not agent CLIs. Point either one at
-# `opencode`, which speaks arbitrary OpenAI-compatible providers; setup.sh
-# writes the provider block for you when you pick openrouter or devpass.
-#
-# Edit backend/effort here any time; rerun setup.sh, or use
-# `scripts/rocket-use-backend.sh <member>` / `kirocrew config edit` directly.
-
 members:
   meowth:
     role: >

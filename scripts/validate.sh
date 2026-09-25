@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# crew-rocket self-validation. Run before committing.
-#   - every skill file referenced by rocket-crew.md exists under skills/
-#   - every skill file has the frontmatter fields it needs
-#   - the steering docs and crew manifest exist
-#   - every *.sh is shellcheck-clean (if shellcheck is installed) and executable
-#   - setup.sh --dry-run runs clean end to end
-# Exit 0 = all checks pass. Exit 1 = at least one failure.
-
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 1

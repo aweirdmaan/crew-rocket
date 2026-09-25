@@ -1,28 +1,4 @@
 #!/usr/bin/env bash
-# crew-rocket setup: one command to install KiroCrew, pick a backend per crew
-# member (Claude Code / Codex / OpenRouter / devpass / whatever else KiroCrew
-# supports), copy the crew (steering docs + skills + manifest) into a target
-# project, and wire up beads as the task memory.
-#
-# Usage:
-#   ./setup.sh [--target DIR] [--meowth BACKEND] [--jessie BACKEND] [--james BACKEND]
-#              [--beads-dir DIR] [--yes] [--dry-run]
-#
-# With no flags it runs interactively: detects what's installed, proposes a
-# backend per member, asks you to confirm, then applies everything. --yes
-# accepts every proposed default for a true single-command run (e.g. in CI
-# or a fresh devbox provisioning script).
-#
-# What this script is honest about: KiroCrew is a fast-moving, largely
-# AI-operated project (see its own issue tracker) and its exact on-disk
-# config schema for per-member backend selection is not fully published as
-# of writing. This script uses the two config keys KiroCrew's own source
-# confirms - `agent.acp_backend` (global) and `agent.member_acp_backend`
-# (per crew member) - via `kirocrew config set`, and never claims success it
-# didn't check the exit code for. Run `kirocrew doctor` yourself afterward;
-# if a key rejects, `kirocrew config edit` and this file's comments tell you
-# what was intended.
-
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -45,6 +21,13 @@ run()  {
   fi
 }
 
+usage() {
+  cat <<'EOF'
+Usage: ./setup.sh [--target DIR] [--meowth BACKEND] [--jessie BACKEND] [--james BACKEND]
+                   [--beads-dir DIR] [--yes] [--dry-run]
+EOF
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --target) TARGET="$2"; shift 2 ;;
@@ -54,7 +37,7 @@ while [ $# -gt 0 ]; do
     --beads-dir) BEADS_DIR="$2"; shift 2 ;;
     --yes) ASSUME_YES=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    -h|--help) usage; exit 0 ;;
     *) log "unknown flag: $1"; exit 2 ;;
   esac
 done
@@ -66,9 +49,7 @@ confirm() {
   case "$reply" in y|Y|yes|YES) return 0 ;; *) return 1 ;; esac
 }
 
-# ---------------------------------------------------------------------------
 step "1. KiroCrew itself"
-# ---------------------------------------------------------------------------
 
 if command -v kirocrew >/dev/null 2>&1; then
   log "found: $(command -v kirocrew)"
@@ -86,9 +67,7 @@ if command -v kirocrew >/dev/null 2>&1; then
   run kirocrew doctor || log "kirocrew doctor reported problems above - resolve them before running the crew."
 fi
 
-# ---------------------------------------------------------------------------
 step "2. Detect available backends"
-# ---------------------------------------------------------------------------
 
 have_claude=0;  command -v claude  >/dev/null 2>&1 && have_claude=1
 have_codex=0;   command -v codex   >/dev/null 2>&1 && have_codex=1
@@ -103,7 +82,6 @@ log "OPENROUTER_API_KEY:  $([ $have_openrouter = 1 ] && echo set || echo unset)"
 log "DEVPASS_BASE_URL/KEY: $([ $have_devpass = 1 ] && echo set || echo unset)"
 
 default_for() {
-  # $1 = member name, prints a proposed backend
   if [ "$1" = james ] && [ "$have_codex" = 1 ]; then echo codex; return; fi
   if [ "$have_claude" = 1 ]; then echo claude; return; fi
   if [ "$have_codex" = 1 ]; then echo codex; return; fi
@@ -133,9 +111,7 @@ if ! confirm "Use this assignment?"; then
   done
 fi
 
-# ---------------------------------------------------------------------------
 step "3. openrouter / devpass via opencode (only if either is chosen)"
-# ---------------------------------------------------------------------------
 
 wants_gateway=0
 for b in "$BACKEND_MEOWTH" "$BACKEND_JESSIE" "$BACKEND_JAMES"; do
@@ -183,9 +159,7 @@ JSON
   log "check it merged correctly with 'opencode auth list' / your opencode.json before relying on it."
 fi
 
-# ---------------------------------------------------------------------------
 step "4. Copy the crew into $TARGET"
-# ---------------------------------------------------------------------------
 
 run mkdir -p "$TARGET/.kiro/steering" "$TARGET/.kiro/crew" "$TARGET/skills" "$TARGET/scripts"
 for f in "$SCRIPT_DIR"/.kiro/steering/*.md; do
@@ -200,7 +174,6 @@ run cp "$SCRIPT_DIR/skills/"*.md "$TARGET/skills/"
 run cp "$SCRIPT_DIR/scripts/rocket-gate-check.sh" "$SCRIPT_DIR/scripts/rocket-use-backend.sh" "$TARGET/scripts/"
 run chmod +x "$TARGET/scripts/rocket-gate-check.sh" "$TARGET/scripts/rocket-use-backend.sh"
 
-# crew.yaml: copy the template, then rewrite the three backend lines.
 crew_yaml="$TARGET/.kiro/crew/crew.yaml"
 if [ ! -f "$crew_yaml" ]; then
   run cp "$SCRIPT_DIR/.kiro/crew/crew.yaml" "$crew_yaml"
@@ -220,9 +193,7 @@ open(path, "w").write(text)
 PY
 fi
 
-# ---------------------------------------------------------------------------
 step "5. beads (task memory)"
-# ---------------------------------------------------------------------------
 
 if [ -z "$BEADS_DIR" ]; then
   BEADS_DIR="$TARGET/.beads"
@@ -243,22 +214,8 @@ else
   log "before running any rocket-* skill; every one of them shells out to bd."
 fi
 
-# ---------------------------------------------------------------------------
 step "6. Apply the backend choice to KiroCrew"
-# ---------------------------------------------------------------------------
 
-# KiroCrew's config is global, not per-named-crew-member: `kirocrew config get`
-# exposes exactly two backend knobs - agent.acp_backend (this session's own
-# backend) and agent.member_acp_backend (the backend a session delegates
-# spawned/subagent work to). There is no per-name key - verified against a
-# real install, `kirocrew config set member_acp_backend.<name> ...` errors
-# "Unknown key". So meowth and
-# james cannot both be pinned at once through config; switching between them
-# means running scripts/rocket-use-backend.sh <member> before that role's
-# session starts. This step sets the two knobs it can: the primary session
-# to meowth's backend (planning is usually where a session starts), and the
-# delegated/subagent knob to jessie's (she's the one meowth spawns as a
-# challenger during rocket-plan).
 if command -v kirocrew >/dev/null 2>&1; then
   if ! run kirocrew config set agent.acp_backend "$BACKEND_MEOWTH"; then
     log "kirocrew rejected agent.acp_backend=$BACKEND_MEOWTH - check 'kirocrew config edit'."
@@ -275,9 +232,7 @@ else
   log "with 'kirocrew config set agent.acp_backend <backend>' once it is."
 fi
 
-# ---------------------------------------------------------------------------
 step "Done"
-# ---------------------------------------------------------------------------
 
 log "Crew copied into: $TARGET"
 log "Steering:          $TARGET/.kiro/steering/{philosophy,opinions,failure-modes}.md"

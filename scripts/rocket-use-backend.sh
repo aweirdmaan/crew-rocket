@@ -1,20 +1,4 @@
 #!/usr/bin/env bash
-# rocket-use-backend.sh <member>
-#
-# KiroCrew 0.7.1's config is NOT per-named-crew-member: `kirocrew config get`
-# exposes exactly two backend knobs, both global -
-#   agent.acp_backend         - the backend THIS session runs on
-#   agent.member_acp_backend  - the backend a session delegates
-#                                spawned/subagent work to
-# (confirmed against a real install - `kirocrew config set member_acp_backend
-# ...`, without the `agent.` prefix, fails with "Unknown key"). So true
-# per-role pinning means switching `agent.acp_backend` before you start that
-# role's session, not three roles coexisting simultaneously under one
-# config. This script is that switch, reading the intended backend for a
-# role straight out of .kiro/crew/crew.yaml instead of you looking it up.
-#
-# Usage: scripts/rocket-use-backend.sh meowth   # before invoking rocket-plan
-#        scripts/rocket-use-backend.sh james    # before invoking rocket-implement
 set -uo pipefail
 
 member="${1:-}"

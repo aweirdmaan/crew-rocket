@@ -1,22 +1,4 @@
 #!/usr/bin/env bash
-# rocket-gate-check.sh <epic-id> <expected-prefix>
-#
-# Replaces Archon's bash gate nodes (which read a verdict file written by a
-# fresh-context AI node) with a durable, backend-agnostic equivalent: the
-# verdict lives as the LAST beads comment on the epic, not in a run-scoped
-# artifacts directory that dies with the session.
-#
-# A skill that gates on human approval or a prior skill's verdict must run
-# this script and stop cold if it exits non-zero. It never guesses "probably
-# fine" - missing or malformed input fails closed.
-#
-# Convention: the gating skill's last action is
-#   bd comment <epic-id> "GATE: PASS <one-line reason>"
-# or
-#   bd comment <epic-id> "GATE: FAIL <what is missing>"
-#
-# Usage:
-#   rocket-gate-check.sh <epic-id> GATE:\ PASS
 set -uo pipefail
 
 epic="${1:-}"

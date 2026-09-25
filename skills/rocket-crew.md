@@ -6,11 +6,10 @@ argument-hint: story id or story description
 
 # The crew-rocket pipeline
 
-There is no Archon-style YAML DAG under KiroCrew (or Codex, or a bare OpenRouter/devpass
-loop) doing the sequencing for you - this skill IS the sequencer. Delegate each stage to
-the named crew member's skill (KiroCrew's subagent delegation, a Codex sub-session, or
-just switching hats yourself if only one backend session is available), and hard-stop at
-each `GATE:` check instead of taking the AI's word for it.
+Nothing sequences the stages below for you automatically - this skill IS the sequencer.
+Delegate each stage to the named crew member's skill (KiroCrew's subagent delegation, a
+Codex sub-session, or just switching hats yourself if only one backend session is
+available), and hard-stop at each `GATE:` check instead of taking the AI's word for it.
 
 ```
 Plan phase (ends with a human decision):
