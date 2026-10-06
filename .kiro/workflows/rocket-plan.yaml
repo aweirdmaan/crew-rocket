@@ -1,0 +1,14 @@
+agents:
+  ideate:
+    agent: rocket-meowth
+    prompt: >
+      Read .kiro/skills/rocket-ideate/SKILL.md and follow it for: {{STORY}}
+  plan:
+    agent: rocket-meowth
+    depends_on: [ideate]
+    prompt: >
+      Read .kiro/skills/rocket-plan/SKILL.md and follow it for the epic the
+      ideate step just created. Look it up with
+      `bd list --type epic --sort created --limit 1 --json` if you need the
+      id (that sort is already newest-first; do not add --reverse, which
+      flips it to oldest-first).

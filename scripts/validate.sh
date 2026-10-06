@@ -54,6 +54,37 @@ else
   note "(PyYAML not installed - skipped YAML parse check; install via 'pip install pyyaml')"
 fi
 
+echo "== kiro workflow templates (migrated from .archon/workflows) =="
+if python3 -c "import yaml" 2>/dev/null; then
+  for f in .kiro/workflows/*.yaml; do
+    if python3 -c "
+import sys, yaml
+doc = yaml.safe_load(open('$f'))
+assert isinstance(doc, dict) and 'agents' in doc, 'missing top-level agents: key'
+assert isinstance(doc['agents'], dict) and doc['agents'], 'agents: must be a non-empty mapping'
+for name, spec in doc['agents'].items():
+    assert 'prompt' in spec, f'{name}: missing prompt'
+" 2>/dev/null; then
+      ok "$f"
+    else
+      bad "$f (invalid, or not shaped like a Task Runner agents: DAG)"
+    fi
+  done
+else
+  note "(PyYAML not installed - skipped workflow YAML parse check)"
+fi
+
+echo "== kiro workflow templates reference real skills =="
+for f in .kiro/workflows/*.yaml; do
+  while IFS= read -r skill; do
+    if [ -f ".kiro/skills/$skill/SKILL.md" ]; then
+      ok "$f -> $skill"
+    else
+      bad "$f references .kiro/skills/$skill/SKILL.md, which does not exist"
+    fi
+  done < <(grep -oE '\.kiro/skills/rocket-[a-z-]+/SKILL\.md' "$f" | sed -E 's#\.kiro/skills/(.*)/SKILL\.md#\1#' | sort -u)
+done
+
 echo "== shell scripts =="
 HAVE_SHELLCHECK=0; command -v shellcheck >/dev/null 2>&1 && HAVE_SHELLCHECK=1
 while IFS= read -r s; do

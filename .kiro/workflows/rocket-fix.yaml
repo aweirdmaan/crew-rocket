@@ -1,0 +1,5 @@
+agents:
+  fix:
+    agent: rocket-james
+    prompt: >
+      Read .kiro/skills/rocket-fix/SKILL.md and follow it for epic {{EPIC}}

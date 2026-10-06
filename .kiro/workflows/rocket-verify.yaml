@@ -1,0 +1,5 @@
+agents:
+  verify:
+    agent: rocket-jessie
+    prompt: >
+      Read .kiro/skills/rocket-verify/SKILL.md and follow it for epic {{EPIC}}

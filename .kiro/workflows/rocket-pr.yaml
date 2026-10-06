@@ -1,0 +1,5 @@
+agents:
+  pr:
+    agent: rocket-james
+    prompt: >
+      Read .kiro/skills/rocket-pr/SKILL.md and follow it for epic {{EPIC}}

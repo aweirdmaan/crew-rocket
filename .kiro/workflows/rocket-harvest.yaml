@@ -1,0 +1,5 @@
+agents:
+  harvest:
+    agent: rocket-james
+    prompt: >
+      Read .kiro/skills/rocket-harvest/SKILL.md and follow it for: {{MR}}

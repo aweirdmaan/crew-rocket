@@ -1,0 +1,5 @@
+agents:
+  approval_check:
+    agent: rocket-meowth
+    prompt: >
+      Read .kiro/skills/rocket-approval-check/SKILL.md and follow it for epic {{EPIC}}

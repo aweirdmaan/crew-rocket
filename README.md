@@ -135,6 +135,7 @@ setup.sh                       # the one-command installer/configurer
 Makefile, scripts/validate.sh  # self-checks: frontmatter, YAML, shellcheck, dry-run
 scripts/rocket-gate-check.sh   # GATE: PASS/FAIL check — the deterministic gate
 scripts/rocket-use-backend.sh  # switch agent.acp_backend to a crew member's assigned backend
+scripts/rocket-dag.sh          # orchestrates .kiro/workflows/*.yaml via KiroCrew's Task Runner API
 .kiro/
 ├── steering/
 │   ├── philosophy.md          # the lens the rules fall out of
@@ -143,6 +144,17 @@ scripts/rocket-use-backend.sh  # switch agent.acp_backend to a crew member's ass
 ├── crew/
 │   ├── crew.yaml               # the three members, their skills, their intended backend
 │   └── beads-dir.example       # points bd at your workspace database
+├── workflows/                   # native Task Runner DAGs, migrated from .archon/workflows/
+│   ├── rocket-plan.yaml             # ideate -> plan, real 2-node DAG (team-rocket-plan.yaml)
+│   ├── rocket-confirm-plan.yaml     # \
+│   ├── rocket-approval-check.yaml   #  \ one phase each, orchestrated by rocket-dag.sh
+│   ├── rocket-implement.yaml        #  / with real gates between them
+│   ├── rocket-verify.yaml           # /  (team-rocket-implement.yaml)
+│   ├── rocket-fix.yaml              #
+│   ├── rocket-confirm.yaml          #
+│   ├── rocket-pr.yaml               #
+│   ├── rocket-retro.yaml            #
+│   └── rocket-harvest.yaml          # single-node DAG (team-rocket-harvest.yaml)
 └── skills/                     # one directory per skill, KiroCrew's native SKILL.md format
     ├── rocket-crew/SKILL.md         # entry point: the full pipeline and its two human gates
     ├── rocket-ideate/SKILL.md       # meowth
@@ -199,18 +211,60 @@ structurally-correct artifact (and may already work on the `kiro` or `kas`
 backends — untested here, no `kiro-cli` installed) but the reliable path on
 `claude` today is still the direct one: tell the session which skill to read.
 
+## Native kiro workflows (migrated from Archon)
+
+team-rocket's three Archon workflows (`team-rocket-plan.yaml`,
+`team-rocket-implement.yaml`, `team-rocket-harvest.yaml`) are migrated into
+`.kiro/workflows/*.yaml` — real KiroCrew Task Runner DAGs (`agents:` +
+`depends_on:`, the same `.yaml`-suffix format that skips the LLM decomposer
+and gets a hard, acyclic-checked dependency graph instead), not just prose.
+
+They are **not** a 1:1 port, because Task Runner only runs one agent per
+run (a node's own `agent:` field is cosmetic, not an execution switch —
+verified against KiroCrew's source, not assumed) and Archon's bash gate
+nodes have no native equivalent here. The honest mapping:
+
+| Archon workflow | Kiro migration |
+|---|---|
+| `team-rocket-plan.yaml` (ideate → plan, one model, no gate) | `.kiro/workflows/rocket-plan.yaml` — a real 2-node DAG, both meowth. The one case where a native multi-node DAG is actually correct. |
+| `team-rocket-implement.yaml` (confirm-plan → **gate** → approval-check → **gate** → implement **loop** → verify → fix → confirm → **gate** → pr → retro) | `.kiro/workflows/rocket-{confirm-plan,approval-check,implement,verify,fix,confirm,pr,retro}.yaml` — one single-node template per phase (each phase switches persona and/or sits behind a real gate), orchestrated by `scripts/rocket-dag.sh implement <epic>`, which runs `scripts/rocket-gate-check.sh` as a real hard check between phases — Archon's own reason for making those bash nodes, not AI-prose checks, now reproduced the same way instead of trusted to a single unattended DAG. |
+| `team-rocket-harvest.yaml` (single node) | `.kiro/workflows/rocket-harvest.yaml` — a single-node DAG, 1:1. |
+
+Run them:
+
+```bash
+scripts/rocket-dag.sh plan '<story id or description>'     # ideate -> plan, ends at OPEN QUESTIONS
+# ... you answer the questions, then approve the plan on the epic ...
+scripts/rocket-dag.sh implement <epic-id>                  # confirm-plan -> ... -> pr -> retro
+scripts/rocket-dag.sh harvest '<mr-url>'                    # after a human review lands comments
+```
+
+**Verified working, on `claude`, against a real KiroCrew install** (not just
+unit-tested): a 5-node DAG with a genuine parallel branch ran end to end,
+scheduled into real execution groups by Task Runner itself, each node's
+output checked directly against beads (`bd show`/`bd comments`), not just
+trusted from the agent's own report. This path sidesteps the custom-agent
+injection bug entirely, because the skill content travels as the task
+prompt, never through the agent spec's `prompt`/`resources` fields — so it
+works today even though `kirocrew chat --agent rocket-meowth` still doesn't.
+`scripts/rocket-dag.sh` passes `"auto_approve": true` on each submission (the
+same provenance-gated flag the dashboard's own Approve button grants, not a
+bypass of it), so it runs unattended rather than stalling on a tool-approval
+prompt per command.
+
 ## Run
 
-After `setup.sh`, on the `claude` backend (verified, see above — the agent
-mechanism doesn't reach the session yet), start a session bound to your
+Two ways to drive the pipeline. The native workflows above are the verified,
+automatable path on `claude` today. The direct, backend-agnostic fallback
+works identically with or without KiroCrew: start a session bound to your
 project (CLI: run from inside it; dashboard: pick it in the project switcher)
-and tell it directly which skill to read: *"read
-`.kiro/skills/rocket-crew/SKILL.md` and follow it for PROJ-123."* That works
-identically whether or not KiroCrew is even involved — a bare `claude` or
-`codex` session with no KiroCrew reads the same file the same way.
+and tell it directly which skill to read — *"read
+`.kiro/skills/rocket-crew/SKILL.md` and follow it for PROJ-123."* A bare
+`claude` or `codex` session with no KiroCrew reads the same file the same way.
 
 On `kiro` or `kas` (untested here, but that's where the docs say custom-agent
-`prompt`/`resources` are natively loaded rather than field-by-field projected):
+`prompt`/`resources` are natively loaded rather than field-by-field projected),
+a third option is a live chat session per role:
 
 ```bash
 scripts/rocket-use-backend.sh meowth   # picks meowth's backend from crew.yaml
@@ -220,8 +274,7 @@ kirocrew chat --agent rocket-meowth    # -m "use rocket-ideate for PROJ-123" for
 Switch to `rocket-jessie` or `rocket-james` (running `rocket-use-backend.sh`
 first if that role's backend differs) as the pipeline reaches their skills.
 
-Either path
-walks the pipeline above, stopping cold at both human gates.
+Any path walks the pipeline above, stopping cold at both human gates.
 
 `make validate` runs this repo's own self-checks before you commit changes to
 the process itself.

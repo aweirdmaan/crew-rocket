@@ -1,0 +1,5 @@
+agents:
+  confirm_plan:
+    agent: rocket-meowth
+    prompt: >
+      Read .kiro/skills/rocket-confirm-plan/SKILL.md and follow it for epic {{EPIC}}

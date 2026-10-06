@@ -161,7 +161,7 @@ fi
 
 step "4. Copy the crew into $TARGET"
 
-run mkdir -p "$TARGET/.kiro/steering" "$TARGET/.kiro/crew" "$TARGET/.kiro/skills" "$TARGET/scripts"
+run mkdir -p "$TARGET/.kiro/steering" "$TARGET/.kiro/crew" "$TARGET/.kiro/skills" "$TARGET/.kiro/workflows" "$TARGET/scripts"
 for f in "$SCRIPT_DIR"/.kiro/steering/*.md; do
   dest="$TARGET/.kiro/steering/$(basename "$f")"
   if [ -f "$dest" ]; then
@@ -175,8 +175,9 @@ for d in "$SCRIPT_DIR"/.kiro/skills/*/; do
   run mkdir -p "$TARGET/.kiro/skills/$slug"
   run cp "$d/SKILL.md" "$TARGET/.kiro/skills/$slug/SKILL.md"
 done
-run cp "$SCRIPT_DIR/scripts/rocket-gate-check.sh" "$SCRIPT_DIR/scripts/rocket-use-backend.sh" "$TARGET/scripts/"
-run chmod +x "$TARGET/scripts/rocket-gate-check.sh" "$TARGET/scripts/rocket-use-backend.sh"
+run cp "$SCRIPT_DIR/.kiro/workflows/"*.yaml "$TARGET/.kiro/workflows/"
+run cp "$SCRIPT_DIR/scripts/rocket-gate-check.sh" "$SCRIPT_DIR/scripts/rocket-use-backend.sh" "$SCRIPT_DIR/scripts/rocket-dag.sh" "$TARGET/scripts/"
+run chmod +x "$TARGET/scripts/rocket-gate-check.sh" "$TARGET/scripts/rocket-use-backend.sh" "$TARGET/scripts/rocket-dag.sh"
 
 KIROCREW_HOME="${KIROCREW_HOME:-$HOME/.kiro/crew}"
 run mkdir -p "$KIROCREW_HOME/skills"
@@ -280,9 +281,14 @@ step "Done"
 log "Crew copied into: $TARGET"
 log "Steering:          $TARGET/.kiro/steering/{philosophy,opinions,failure-modes}.md"
 log "Skills:            $TARGET/.kiro/skills/rocket-*/SKILL.md (+ global copies under $KIROCREW_HOME/skills/)"
+log "Workflows:         $TARGET/.kiro/workflows/rocket-*.yaml (native Task Runner DAGs, migrated from Archon)"
 log "Crew manifest:     $crew_yaml"
 log "Beads:             $BEADS_DIR"
 log ""
-log "Next: from $TARGET, invoke the 'rocket-crew' skill with a story id or description"
-log "(in Claude Code / Codex / KiroCrew, whichever backend you assigned to meowth)."
+log "Next: from $TARGET, either invoke the 'rocket-crew' skill with a story id or"
+log "description (in Claude Code / Codex / KiroCrew, whichever backend you assigned"
+log "to meowth), or run the native workflows directly:"
+log "  scripts/rocket-dag.sh plan '<story id or description>'"
+log "  scripts/rocket-dag.sh implement <epic-id>"
+log "  scripts/rocket-dag.sh harvest '<mr-url>'"
 log "See README.md for the full pipeline and the two human approval gates."

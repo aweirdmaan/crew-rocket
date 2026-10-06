@@ -1,0 +1,5 @@
+agents:
+  implement:
+    agent: rocket-james
+    prompt: >
+      Read .kiro/skills/rocket-implement/SKILL.md and follow it for epic {{EPIC}}

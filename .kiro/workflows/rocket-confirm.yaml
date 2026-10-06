@@ -1,0 +1,5 @@
+agents:
+  confirm:
+    agent: rocket-jessie
+    prompt: >
+      Read .kiro/skills/rocket-confirm/SKILL.md and follow it for epic {{EPIC}}
