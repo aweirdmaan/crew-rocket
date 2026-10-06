@@ -136,6 +136,7 @@ Makefile, scripts/validate.sh  # self-checks: frontmatter, YAML, shellcheck, dry
 scripts/rocket-gate-check.sh   # GATE: PASS/FAIL check — the deterministic gate
 scripts/rocket-use-backend.sh  # switch agent.acp_backend to a crew member's assigned backend
 scripts/rocket-dag.sh          # orchestrates .kiro/workflows/*.yaml via KiroCrew's Task Runner API
+scripts/rocket-watch.sh        # live SSE progress for a run (needs the forked KiroCrew build, see below)
 .kiro/
 ├── steering/
 │   ├── philosophy.md          # the lens the rules fall out of
@@ -251,6 +252,18 @@ works today even though `kirocrew chat --agent rocket-meowth` still doesn't.
 same provenance-gated flag the dashboard's own Approve button grants, not a
 bypass of it), so it runs unattended rather than stalling on a tool-approval
 prompt per command.
+
+**Watching a run live:** Task Runner has no push/WebSocket channel in
+mainline KiroCrew — even the dashboard's own Projects page just polls
+`GET /api/taskrunner` every 3 seconds (verified in its source, not assumed).
+`scripts/rocket-watch.sh <task_id>` streams one instead, over a new
+`GET /api/taskrunner/{task_id}/stream` Server-Sent-Events endpoint built and
+tested for this (`kirodotdev/KiroCrew` PR from this project's
+`aweirdmaan/KiroCrew` fork, branch `fix/claude-backend-and-devpass` —
+**mainline KiroCrew does not have this endpoint yet**, so `rocket-watch.sh`
+only works against that build). It prints run/step status changes and each
+step's result as they happen, polling the gateway's own in-memory state at
+0.3s server-side rather than the client re-requesting every 3s.
 
 ## Run
 

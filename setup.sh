@@ -176,8 +176,8 @@ for d in "$SCRIPT_DIR"/.kiro/skills/*/; do
   run cp "$d/SKILL.md" "$TARGET/.kiro/skills/$slug/SKILL.md"
 done
 run cp "$SCRIPT_DIR/.kiro/workflows/"*.yaml "$TARGET/.kiro/workflows/"
-run cp "$SCRIPT_DIR/scripts/rocket-gate-check.sh" "$SCRIPT_DIR/scripts/rocket-use-backend.sh" "$SCRIPT_DIR/scripts/rocket-dag.sh" "$TARGET/scripts/"
-run chmod +x "$TARGET/scripts/rocket-gate-check.sh" "$TARGET/scripts/rocket-use-backend.sh" "$TARGET/scripts/rocket-dag.sh"
+run cp "$SCRIPT_DIR/scripts/rocket-gate-check.sh" "$SCRIPT_DIR/scripts/rocket-use-backend.sh" "$SCRIPT_DIR/scripts/rocket-dag.sh" "$SCRIPT_DIR/scripts/rocket-watch.sh" "$TARGET/scripts/"
+run chmod +x "$TARGET/scripts/rocket-gate-check.sh" "$TARGET/scripts/rocket-use-backend.sh" "$TARGET/scripts/rocket-dag.sh" "$TARGET/scripts/rocket-watch.sh"
 
 KIROCREW_HOME="${KIROCREW_HOME:-$HOME/.kiro/crew}"
 run mkdir -p "$KIROCREW_HOME/skills"
