@@ -20,14 +20,16 @@ If you are running as a KiroCrew session and the `knowledge_add_document` tool i
 
 ## 1. Discover (meowth)
 
-Given WHY and WHAT, find everything needed to write the HOW. Read the code the story touches, its siblings, its tests. If `local_knowledge_search` is available, also search it for prior decisions or steering passages relevant to this story - it can surface something the direct reads above missed by wording rather than location. Cite every source. Log every decision as a beads comment on the epic, in this shape:
+Given WHY and WHAT, find everything needed to write the HOW. Read the code the story touches, its siblings, its tests. If `local_knowledge_search` is available, also search it for prior decisions or steering passages relevant to this story - it can surface something the direct reads above missed by wording rather than location. Cite every source. Log every decision as a beads comment on the epic, one bullet list item per field, in this shape:
 
 ```
-DECISION: <what>
-REASON: <why>
-EVIDENCE: <file:line, doc, or command output>
-REJECTED: <alternatives and why not - mandatory; write "none considered" if truly none>
+- **DECISION:** <what>
+- **REASON:** <why>
+- **EVIDENCE:** <file:line, doc, or command output>
+- **REJECTED:** <alternatives and why not - mandatory; write "none considered" if truly none>
 ```
+
+Use a bullet list, not plain lines - a markdown renderer collapses consecutive plain lines with no blank line between them into one run-on paragraph, which is what makes a plan unreadable in a UI (a human reading raw `bd comments` text in a terminal doesn't notice, but anyone reading the same comment rendered as markdown does). A bullet list avoids this: every item is forced onto its own line regardless of renderer. Put a blank line between separate decision blocks too, so they read as distinct groups rather than one long list.
 
 Do not guess. A question the repo, the tracker, or the project docs can answer is answered there. Note the repo's no-touch files (toolchain pins, CI config) and the gates that must pass.
 
